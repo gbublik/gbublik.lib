@@ -7,6 +7,7 @@ use Bitrix\Main\ObjectPropertyException;
 use Bitrix\Main\ORM\Fields\ExpressionField;
 use Bitrix\Main\SystemException;
 use Bitrix\Main\Type;
+use Bitrix\Main\Entity;
 
 /**
  * Класс-пример, для копирования примеров различных решений ORM классов
@@ -33,12 +34,17 @@ class ExampleOrmTable extends BaseOrm
                 'default_value' => function () {
                     return new Type\DateTime();
                 },
-                'required' => true
+                'required' => true,
             ),
             'user_id' => array(
                 'data_type' => 'integer',
-                'title' => 'Автор транзакции',
-                'required' => true
+                'title' => 'Пользователь',
+                'required' => true,
+                'validation' => function() {
+                    return array(
+                        new Entity\Validator\RegExp('/[\d-]{13,}/')
+                    );
+                }
             ),
             'user' => array(
                 'data_type' => 'Bitrix\Main\UserTable',
@@ -53,10 +59,25 @@ class ExampleOrmTable extends BaseOrm
                 'values' => array('N', 'Y'),
                 'default_value' => 'N'
             ),
+            'test_string' => array(
+                'data_type' => 'string',
+                'title' => 'Тестовая строка',
+                'validation' => function() {
+                    return array(
+                        function ($value, $primary, $row, $field) {
+                            // value - значение поля
+                            // primary - массив с первичным ключом, в данном случае [ID => 1]
+                            // row - весь массив данных, переданный в ::add или ::update
+                            // field - объект валидируемого поля - Entity\StringField('ISBN', ...)
+                        }
+                    );
+                }
+            )
         ];
     }
 
     /**
+     * 1. Агрегатные функции
      * @return bool
      * @throws ArgumentException
      * @throws ObjectPropertyException

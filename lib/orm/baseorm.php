@@ -1,30 +1,17 @@
 <?php
-namespace GBublik\Lib;
+namespace GBublik\Lib\Orm;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\DB\Result;
-use Bitrix\Main\ORM\Event;
+use Bitrix\Main\Event;
+use Bitrix\Main\EventResult;
 use Bitrix\Main\SystemException;
-use Bitrix\Main\Type;
 use Bitrix\Main\ORM\Data\DataManager;
-use Bitrix\Main\ORM\EventResult;
 use \Bitrix\Main\DB\SqlQueryException;
 
 abstract class BaseOrm extends DataManager
 {
-    public static function onBeforeUpdate(Event $event)
-    {
-        $result = new EventResult();
-        $fields = $event->getParameter("fields");
-        if (key_exists('date_update', static::getMap()) && !isset($fields['date_update']))
-        {
-            $fields['date_update'] = new Type\DateTime();
-        }
-        $result->modifyFields($fields);
-        return $result;
-    }
-
     public static function add(array $arFields)
     {
         try{
@@ -70,11 +57,11 @@ abstract class BaseOrm extends DataManager
     {
         $arEventParameters = ['fields' => $arParams];
         if (!empty($primary)) $arEventParameters['primary'] = $primary;
-        $event = new \Bitrix\Main\Event($module, $eventName, $arEventParameters);
+        $event = new Event($module, $eventName, $arEventParameters);
         $event->send();
         foreach ($event->getResults() as $eventResult)
         {
-            if($eventResult->getType() == \Bitrix\Main\EventResult::ERROR)
+            if($eventResult->getType() == EventResult::ERROR)
                 return null;
             $arParams = array_merge($arParams, $eventResult->getParameters());
         }
@@ -124,7 +111,7 @@ abstract class BaseOrm extends DataManager
     }
 
     /**
-     * @param $sql
+     * @param string $sql
      * @param array $arFields
      * @return Result|bool|null
      * @throws SqlQueryException
@@ -161,21 +148,16 @@ abstract class BaseOrm extends DataManager
             }
 
         } elseif ($c > 1) {
-            $db->startTransaction();
             foreach ($sql as $q) {
                 try{
                     $db->query(str_replace($keys, $arFields, $q));
                 } catch (SqlQueryException $e) {
                     echo str_replace($keys, $arFields, $q);
-                    $db->rollbackTransaction();
                     throw $e;
                 }
             }
-            $db->commitTransaction();
             return true;
         }
-
-
         return null;
     }
 }

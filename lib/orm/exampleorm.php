@@ -1,6 +1,6 @@
 <?php
 
-namespace GBublik\Lib;
+namespace GBublik\Lib\Orm;
 
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\ObjectPropertyException;

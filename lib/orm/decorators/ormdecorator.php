@@ -67,14 +67,4 @@ class OrmDecorator extends DecoratorInterface
     {
         $this->ormEntity::getByPrimary($primary, $params);
     }
-
-    /**
-     * Все остальные методы мапятся через магию, IDE не затащит
-     * @param $name
-     * @param $arguments
-     */
-    public function __call($name, $arguments)
-    {
-        call_user_func($this->ormEntity::{$name}, $arguments);
-    }
 }

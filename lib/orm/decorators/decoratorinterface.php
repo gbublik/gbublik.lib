@@ -43,4 +43,15 @@ abstract class DecoratorInterface
     public function getMap(){
         return [];
     }
+
+    /**
+     * @param $primary
+     * @param array $params
+     * @return Result
+     */
+    public function getByPrimary($primary, array $params = [])
+    {
+        return null;
+    }
+
 }

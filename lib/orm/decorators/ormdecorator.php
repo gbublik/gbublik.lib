@@ -10,6 +10,10 @@ use Bitrix\Main\ORM\Query\Result;
 use Bitrix\Main\SystemException;
 use Exception;
 
+/**
+ * Вчегда должен быть первым декоратором, иначе будет работать неправильно
+ * @package GBublik\Lib\Orm\Decorators
+ */
 class OrmDecorator extends DecoratorInterface
 {
     /** @var DataManager  */
@@ -57,5 +61,20 @@ class OrmDecorator extends DecoratorInterface
     public function getMap()
     {
         return $this->ormEntity::getMap();
+    }
+
+    public function getByPrimary($primary, array $params = [])
+    {
+        $this->ormEntity::getByPrimary($primary, $params);
+    }
+
+    /**
+     * Все остальные методы мапятся через магию, IDE не затащит
+     * @param $name
+     * @param $arguments
+     */
+    public function __call($name, $arguments)
+    {
+        call_user_func($this->ormEntity::{$name}, $arguments);
     }
 }

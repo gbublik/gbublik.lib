@@ -3,6 +3,10 @@ namespace GBublik\Lib\Orm\Decorators;
 
 use Bitrix\Main\Type\DateTime;
 
+/**
+ * Автоматическое обновление даты
+ * @package GBublik\Lib\Orm\Decorators
+ */
 class AutoDateUpdateDecorator extends DecoratorInterface
 {
     /** @var string */

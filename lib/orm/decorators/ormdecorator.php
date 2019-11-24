@@ -46,16 +46,21 @@ class OrmDecorator extends DecoratorInterface
         return $this->ormEntity::update($primary, $arFields);
     }
 
+    public function delete(int $primary)
+    {
+        return $this->ormEntity::delete($primary);
+    }
+
     /**
-     * @param array $arField
+     * @param array $params
      * @return Result
      * @throws ArgumentException
      * @throws ObjectPropertyException
      * @throws SystemException
      */
-    public function getList(array $arField)
+    public function getList(array $params = [])
     {
-        return $this->ormEntity::getList($arField);
+        return $this->ormEntity::getList($params);
     }
 
     public function getMap()
@@ -68,13 +73,28 @@ class OrmDecorator extends DecoratorInterface
         $this->ormEntity::getByPrimary($primary, $params);
     }
 
+    public function getById(int $primary)
+    {
+        $this->ormEntity::getById($primary);
+    }
+
+    public function getOldData(int $id)
+    {
+        static $data;
+        if (is_null($data)) {
+            $data = $this->ormEntity::getById($id)->fetch();
+        }
+        return $data;
+    }
+
     /**
      * Все остальные методы мапятся через магию, IDE не затащит
      * @param $name
      * @param $arguments
      */
-    public function __call($name, $arguments)
-    {
-        call_user_func($this->ormEntity::{$name}, $arguments);
-    }
+ //   public function __call($name, $arguments)
+ //   {
+ //       call_user_func($this->ormEntity::{$name}, $arguments);
+ //   }
+
 }

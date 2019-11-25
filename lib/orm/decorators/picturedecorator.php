@@ -1,14 +1,16 @@
 <?php
-namespace GBublik\Lib\Orm;
+namespace GBublik\Lib\Orm\Decorators;
 
-use GBublik\Lib\Orm\Decorators\DecoratorException;
-use GBublik\Lib\Orm\Decorators\DecoratorInterface;
+
+use Bitrix\Main\ORM\Data\UpdateResult;
+use CAllFile;
+use Protobuf\Exception;
 
 /**
  * Поля картинок
  * @package GBublik\Lib\Orm
  */
-class PictureDecorator extends DecoratorInterface
+class PictureDecorator extends FileDecorator
 {
     /** @var int  */
     protected $maxWidth;
@@ -16,48 +18,53 @@ class PictureDecorator extends DecoratorInterface
     /** @var int  */
     protected $maxHeight;
 
+    protected $resizeType;
+
     /** @var string */
     protected $field;
 
-    /**
-     * ПОле картинок
-     * @param DecoratorInterface $decorator
-     * @param string $field
-     * @param int|null $maxWidth
-     * @param int|null $maxHeight
-     * @throws DecoratorException
-     */
-    public function __construct(DecoratorInterface $decorator, string $field, int $maxWidth = null, int $maxHeight = null)
+    public function setResize(int $width, int $height, int $resizeType = 1)
     {
-        $fields = $this->getMap();
-        if (!array_key_exists($field, $fields))
-            throw new DecoratorException(sprintf('Entity %s has no field %s', get_class($decorator), $field));
-
-        if ($fields[$field]['data_type'] != 'integer' && !isset($fields[$field]['serialized']))
-            throw new DecoratorException(sprintf('%s field must be a integer type', $field));
-        elseif (($fields[$field]['data_type'] == 'string' || $fields[$field]['data_type'] == 'text') && !isset($fields[$field]['serialized'])) {
-            throw new DecoratorException(sprintf('%s field must be a serialized', $field));
-        }
-
-        $this->field = $field;
-        $this->maxWidth = $maxWidth;
-        $this->maxHeight = $maxHeight;
-        parent::__construct($decorator);
+        $this->maxWidth = $width;
+        $this->maxHeight = $height;
+        $this->resizeType = $resizeType;
     }
 
     public function add(array $arFields)
     {
-        //$fields = $this->getMap();
+        if (isset($arFields[$this->field]) && is_array($arFields[$this->field])) {
+            $arFields[$this->field] = $this->resizeImage($arFields[$this->field]);
+        }
         return parent::add($arFields);
     }
 
-    protected function getOldDataRow(int $id)
+    /**
+     * @param int $primary
+     * @param array $arFields
+     * @return UpdateResult
+     * @throws Exception
+     * @throws DecoratorException
+     */
+    public function update(int $primary, array $arFields)
     {
-        $rs = $this->decorator->getList([
-            'filter' => [
-                '=id' => $id
-            ],
-            'select' => [$this->field]
-        ])->fetch();
+        if (isset($arFields[$this->field]) && is_array($arFields[$this->field])) {
+            $arFields[$this->field] = $this->resizeImage($arFields[$this->field]);
+        }
+        return parent::update($primary, $arFields);
+    }
+
+    protected function resizeImage(array $arFile)
+    {
+        if (isset($this->maxWidth) && isset($this->maxHeight) && isset($this->resizeType)) {
+            CAllFile::ResizeImage(
+                $arFile,
+                array(
+                    'width' => $this->maxWidth,
+                    'height' => $this->maxHeight
+                ),
+                $this->resizeType
+            );
+        }
+        return $arFile;
     }
 }

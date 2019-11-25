@@ -7,8 +7,11 @@ use Bitrix\Main\ORM\Query\Result;
 
 abstract class DecoratorInterface
 {
+
     /** @var DecoratorInterface */
     protected $decorator;
+
+    protected $field;
 
     public function __construct(DecoratorInterface $decorator){
         $this->decorator = $decorator;
@@ -31,6 +34,10 @@ abstract class DecoratorInterface
         return $this->decorator->update($primary, $arFields);
     }
 
+    public function delete(int $primary){
+        return $this->decorator->delete($primary);
+    }
+
     /**
      * @param array $arFields
      * @return Result
@@ -40,8 +47,9 @@ abstract class DecoratorInterface
         return $this->decorator->getList($arFields);
     }
 
-    public function getMap(){
-        return [];
+    public function getMap()
+    {
+        return $this->decorator->getMap();
     }
 
     /**
@@ -54,4 +62,17 @@ abstract class DecoratorInterface
         return null;
     }
 
+    public function getOldData(int $primary)
+    {
+        return $this->decorator->getOldData($primary);
+    }
+
+    public function getTypeAllField(string $type)
+    {
+        if ($this->field)
+            $link = $this->decorator->getTypeAllField($type);
+        if (static::class == $type) $link[] = $this->field;
+
+        return $link;
+    }
 }

@@ -116,7 +116,7 @@ abstract class BaseOrm extends DataManager
      * @return Result|bool|null
      * @throws SqlQueryException
      */
-    public static function querySql($sql, array $arFields)
+    public static function querySql($sql, array $arFields = [])
     {
         $db = Application::getConnection();
         $keys = array_map(function ($key){
@@ -133,9 +133,8 @@ abstract class BaseOrm extends DataManager
         );
 
         foreach ($arFields as $key=>&$value){
-            if (strpos($key, 'table_') === false && !empty($value))
+            if (strpos($key, 'table_') === false && !empty($value) && !is_numeric($value))
                 $value = '\'' . $value . '\'';
-            elseif (empty($value)) $value = 'NULL';
         }
 
         $c = count($sql);
@@ -146,7 +145,6 @@ abstract class BaseOrm extends DataManager
                 echo str_replace($keys, $arFields, $sql[0]);
                 throw $e;
             }
-
         } elseif ($c > 1) {
             foreach ($sql as $q) {
                 try{

@@ -50,6 +50,7 @@ class MultipleValueDecorator extends DecoratorInterface
      */
     public function getList(array $params = [])
     {
+        /*
         if (isset($params['select']) && in_array($this->field, $params['select'])) {
             $runtimeFieldsName = str_replace('.', '_', $this->field) . '_runtime';
             $params['runtime'][$runtimeFieldsName] =  [
@@ -65,6 +66,7 @@ class MultipleValueDecorator extends DecoratorInterface
                 [$runtimeFieldsName . '.' . $this->selectField]
             );
         }
+        */
         return $this->decorator->getList($params);
     }
 
@@ -87,8 +89,6 @@ class MultipleValueDecorator extends DecoratorInterface
                 ]
             ]);
             */
-            $linkFields = $this->getTypeAllField(self::class);
-
         }
         return $data;
     }

@@ -59,20 +59,16 @@ abstract class DecoratorInterface
      */
     public function getByPrimary($primary, array $params = [])
     {
-        return null;
+        return $this->decorator->getByPrimary($primary, $params);
+    }
+
+    public function getById(int $id)
+    {
+        return $this->decorator->getById($id);
     }
 
     public function getOldData(int $primary)
     {
         return $this->decorator->getOldData($primary);
-    }
-
-    public function getTypeAllField(string $type)
-    {
-        if ($this->field)
-            $link = $this->decorator->getTypeAllField($type);
-        if (static::class == $type) $link[] = $this->field;
-
-        return $link;
     }
 }

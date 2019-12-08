@@ -70,12 +70,12 @@ class OrmDecorator extends DecoratorInterface
 
     public function getByPrimary($primary, array $params = [])
     {
-        $this->ormEntity::getByPrimary($primary, $params);
+        return $this->ormEntity::getByPrimary($primary, $params);
     }
 
     public function getById(int $primary)
     {
-        $this->ormEntity::getById($primary);
+        return $this->ormEntity::getById($primary);
     }
 
     public function getOldData(int $id)

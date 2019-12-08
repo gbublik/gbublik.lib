@@ -4,7 +4,6 @@ namespace GBublik\Lib\Orm\Decorators;
 
 use Bitrix\Main\ORM\Data\UpdateResult;
 use CAllFile;
-use Protobuf\Exception;
 
 /**
  * Поля картинок

@@ -46,4 +46,10 @@ trait Search
         );
         return true;
     }
+
+    public static function deleteAllIndex()
+    {
+        if (!Loader::includeModule('search')) return false;
+        \CSearch::DeleteIndex(__CLASS__, '%');
+    }
 }

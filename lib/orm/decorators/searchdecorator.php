@@ -3,10 +3,7 @@ namespace GBublik\Lib\Orm\Decorators;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
-use Closure;
 use Exception;
-use Prodvigaeff\Bilet\Core\PlaceTable;
-use Prodvigaeff\Bilet\Core\StageTable;
 
 /**
  * Поля картинок
@@ -23,22 +20,27 @@ class SearchDecorator extends DecoratorInterface
     /** @var array */
     protected $fields;
 
+    protected $additionalFields;
+
+    protected $urlTemplate;
+
     /**
      * SearchDecorator constructor.
      * @param DecoratorInterface $decorator
      * @param string $module
-     * @param string|array $id
      * @param array $fields
+     * @param string|null $urlTemplate
      * @throws DecoratorException
      * @throws LoaderException
      */
-    public function __construct(DecoratorInterface $decorator, string $module, $id = 'id', array $fields = ['TITLE' => ['name']])
+    public function __construct(DecoratorInterface $decorator, string $module, array $fields = ['TITLE' => ['name']], string $urlTemplate = null)
     {
         if (!Loader::includeModule('search')) throw new DecoratorException('Модуль search не установлен');
 
         $this->module = $module;
-        $this->id = $id;
+        $this->id = 'id';
         $this->fields = $fields;
+        $this->urlTemplate = $urlTemplate;
         parent::__construct($decorator);
     }
 
@@ -47,7 +49,7 @@ class SearchDecorator extends DecoratorInterface
         $rs = $this->decorator->add($arFields);
         if ($rs->isSuccess()) {
             if ($arFields['active'] == 'Y')
-                $this->reIndex($this->getSearchId($arFields), $this->getSearchFields($arFields));
+                $this->reIndex($arFields);
         }
         return $rs;
     }
@@ -61,9 +63,9 @@ class SearchDecorator extends DecoratorInterface
                 'select' => $this->getKeysForSelect()
             ])->fetch();
             if ($fields['active'] == 'Y') {
-                $this->reIndex($this->getSearchId($fields), $this->getSearchFields($fields));
+                $this->reIndex($fields);
             } else
-                $this->delIndex($this->getSearchId(['id' => $rs->getId()]));
+                $this->delIndex(['id' => $rs->getId()]);
         }
         return $rs;
     }
@@ -77,7 +79,7 @@ class SearchDecorator extends DecoratorInterface
     {
         try {
             $rs = parent::delete($primary);
-            $this->delIndex($this->getSearchId(['id' => $primary]));
+            $this->delIndex(['id' => $primary]);
             return $rs;
         } catch (Exception $exception) {
             throw $exception;
@@ -98,6 +100,23 @@ class SearchDecorator extends DecoratorInterface
             } else
                 $keys[] = $value;
         }
+        if (!empty($this->urlTemplate)) {
+            $matches = [];
+            preg_match_all('/#(.*?)#/', $this->urlTemplate, $matches, PREG_PATTERN_ORDER);
+            if (!empty($matches[1])) {
+                foreach ($matches[1] as $v) {
+                    if (strpos($v, '.') !== false) {
+                        $k = str_replace('.', '_', $v);
+                    } else {
+                        $k = $v;
+                    }
+                    if (!in_array($k, $keys)) {
+                        $keys[$k] = $v;
+                    }
+                }
+            }
+        }
+
         return $keys;
     }
 
@@ -143,24 +162,44 @@ class SearchDecorator extends DecoratorInterface
         return $out;
     }
 
-    public function reIndex($id, array $arFields)
+    public function reIndex($fields)
     {
+        $arFields = $this->getSearchFields($fields);
+        $id = $this->getSearchId($fields);
         $arFields['SITE_ID'] = ['s1'];
         $arFields['DATE_CHANGE'] = date('d.m.Y H:i:s');
-        $arFields['PERMISSIONS'] = [
-            '2'
-        ];
+        $arFields['PERMISSIONS'] = [2];
+        //$arFields['URL'] = '/catalog/' . $id . '/';
+
+        if (!empty($this->urlTemplate)) {
+            $arFields['URL'] = $this->urlTemplate;
+            $matches = [];
+            preg_match_all('/#(.*?)#/', $this->urlTemplate, $matches, PREG_PATTERN_ORDER);
+            foreach ($matches[1] as $match) {
+                if (strpos($match, '.') === false) {
+                    $arFields['URL'] = str_replace('#'.$match . '#', $fields[$match], $arFields['URL']);
+                } else {
+                    $arFields['URL'] = str_replace(
+                        '#' . $match . '#',
+                        $fields[str_replace('.', '_', $match)] ,
+                        $arFields['URL']
+                    );
+                }
+            }
+        }
 
         \CSearch::Index(
             $this->module,
             $id,
-            $arFields
+            $arFields,
+            true
         );
         return true;
     }
 
-    public function delIndex($id)
+    public function delIndex($fields)
     {
+        $id = $this->getSearchId($fields);
         \CSearch::DeleteIndex(
             $this->module,
             $id

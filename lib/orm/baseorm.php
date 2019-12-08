@@ -6,6 +6,8 @@ use Bitrix\Main\ArgumentException;
 use Bitrix\Main\DB\Result;
 use Bitrix\Main\Event;
 use Bitrix\Main\EventResult;
+use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
 use Bitrix\Main\SystemException;
 use Bitrix\Main\ORM\Data\DataManager;
 use \Bitrix\Main\DB\SqlQueryException;
@@ -157,5 +159,14 @@ abstract class BaseOrm extends DataManager
             return true;
         }
         return null;
+    }
+    public static function delIndex(int $id)
+    {
+        if (!Loader::includeModule('search')) return false;
+        \CSearch::DeleteIndex(
+            __CLASS__,
+            $id
+        );
+        return true;
     }
 }

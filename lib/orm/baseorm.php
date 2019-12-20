@@ -11,9 +11,15 @@ use Bitrix\Main\LoaderException;
 use Bitrix\Main\SystemException;
 use Bitrix\Main\ORM\Data\DataManager;
 use \Bitrix\Main\DB\SqlQueryException;
+use GBublik\Lib\Orm\Decorators\OrmDecorator;
 
 abstract class BaseOrm extends DataManager
 {
+    public static function getDecoratedClass()
+    {
+        return new OrmDecorator(new static());
+    }
+
     public static function add(array $arFields)
     {
         try{
@@ -142,7 +148,8 @@ abstract class BaseOrm extends DataManager
         $c = count($sql);
         if ($c == 1) {
             try{
-                return $db->query(str_replace($keys, $arFields, $sql[0]));
+                $s = str_replace($keys, $arFields, $sql[0]);
+                return $db->query($s);
             } catch (SqlQueryException $e) {
                 echo str_replace($keys, $arFields, $sql[0]);
                 throw $e;

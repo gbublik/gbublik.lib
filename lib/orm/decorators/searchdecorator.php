@@ -187,7 +187,7 @@ class SearchDecorator extends DecoratorInterface
                 }
             }
         }
-
+        foreach ($arFields as &$field) $field = strip_tags($field);
         \CSearch::Index(
             $this->module,
             $id,
